@@ -1,5 +1,12 @@
 import socket
 
+HEADER = 64   # bytes
+PORT = 9090
+SERVER = '192.168.1.210'
+ADDR = (SERVER, PORT)
+FORMAT = 'utf-8'
+DISCONNECT_MESSAGE = "!DISCONNECT"
+
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 client.connect(("localhost", 9999))
