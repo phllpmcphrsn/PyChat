@@ -15,9 +15,9 @@ DISCONNECT_MESSAGE = '!DISCONNECT'
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(ADDR)
 
-def handle_client(conn, addr):
+def handle_client(conn: socket.socket, addr):
     '''Runs concurrently for each client'''
-    log.info('[NEW CONNECTION] %s connected', addr)
+    log.info(f'[NEW CONNECTION] %s:%s connected', addr[0], addr[1])
     
     connected = True
     while connected:
@@ -27,16 +27,19 @@ def handle_client(conn, addr):
             # by you. We use a header to gather how large the message followed
             # by the actual message
             msg_length = conn.recv(HEADER).decode(FORMAT)
-            msg_length = int(msg_length)
-            msg = conn.recv(msg_length).decode(FORMAT)
-            if msg == DISCONNECT_MESSAGE:
-                connected = False
+            if msg_length:
+                msg_length = int(msg_length)
+                msg = conn.recv(msg_length).decode(FORMAT)
+                if msg == DISCONNECT_MESSAGE:
+                    connected = False
 
-            log.info(f'[{addr}] {msg}')
+                log.info(f'[{addr}] {msg}')
         finally:
             conn.close()
 
 def start():
+    # Takes the amount of allowed active connections
+    # as an argument
     server.listen()
     log.info(f'[LISTENING] Server now listening on %s', SERVER)
     while True:
@@ -49,7 +52,7 @@ def start():
             thread.start()
             
             # -1 to account for the start() thread
-            log.debug(f'[ACTIVE CONNECTIONS] %d', {threading.activeCount() - 1})
+            log.info(f'[ACTIVE CONNECTIONS] %d', threading.active_count() - 1)
         except KeyboardInterrupt:
             # Capture abrupt closed connections like Ctrl-C
             # Send message notifying of closed server
@@ -60,18 +63,18 @@ def start():
             conn.close()
             server.close()
 
-def main():
-    # should place this logging into a class for more global use
-    streamHandler = log.StreamHandler()
-    streamHandler.setStream(sys.stdout)
-    fileHandler = log.FileHandler('logs/server.log')
-    log.basicConfig(format='%(levelname)s:%(asctime)s :: %(message)s', handlers=[streamHandler, fileHandler], level=log.INFO, datefmt='%m/%d/%Y %I:%M:%S %p')
+# def main():
+# should place this logging into a class for more global use
+streamHandler = log.StreamHandler()
+streamHandler.setStream(sys.stdout)
+fileHandler = log.FileHandler('logs/server.log')
+log.basicConfig(format='%(levelname)s:%(asctime)s :: %(message)s', handlers=[streamHandler, fileHandler], level=log.INFO, datefmt='%m/%d/%Y %I:%M:%S %p')
 
-    log.info('[STARTING] Server is starting...')
-    start()
+log.info('[STARTING] Server is starting...')
+start()
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
 # try:
 #     while True:
 #         try:
